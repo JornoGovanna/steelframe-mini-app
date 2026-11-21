@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#111318">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="format-detection" content="telephone=no">
+  <title>STEELFRAME</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: var(--tg-theme-bg-color, #111318);
+      --surface: var(--tg-theme-secondary-bg-color, #1b1e24);
+      --card: #20242b;
+      --text: var(--tg-theme-text-color, #f4f5f7);
+      --muted: var(--tg-theme-hint-color, #a2a7b0);
+      --accent: #d8ef28;
+      --accent-dark: #161a08;
+      --line: rgba(255,255,255,.09);
+      --danger: #ff7a72;
+      --radius: 18px;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; scroll-padding-top: 76px; -webkit-text-size-adjust: 100%; }
+    body {
+      margin: 0;
+      min-width: 320px;
+      min-height: 100vh;
+      min-height: 100dvh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      -webkit-font-smoothing: antialiased;
+      overscroll-behavior-y: contain;
+      touch-action: pan-y pinch-zoom;
+    }
+    button, input, textarea { font: inherit; }
+    button { cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+    input, textarea { -webkit-tap-highlight-color: transparent; }
+    .app { width: 100%; max-width: 920px; margin: 0 auto; padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      height: calc(64px + env(safe-area-inset-top));
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 18px;
+      background: color-mix(in srgb, var(--bg) 86%, transparent);
+      backdrop-filter: blur(18px);
+      border-bottom: 1px solid var(--line);
+    }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 850; letter-spacing: -.3px; }
+    .brand-mark {
+      width: 34px; height: 34px; display: grid; place-items: center;
+      border: 1px solid rgba(216,239,40,.55); border-radius: 10px;
+      color: var(--accent); background: rgba(216,239,40,.08);
+    }
+    .brand span { color: var(--accent); }
+    .status { display: flex; align-items: center; gap: 7px; color: var(--muted); font-size: 12px; }
+    .status i { width: 7px; height: 7px; border-radius: 50%; background: #69d391; box-shadow: 0 0 10px #69d391; }
+
+    main { padding: 16px 14px 0; }
+    section { scroll-margin-top: 76px; margin-bottom: 34px; }
+    h1, h2, h3, p { margin-top: 0; }
+    h2 { font-size: 21px; letter-spacing: -.5px; margin-bottom: 14px; }
+    .eyebrow { color: var(--accent); font-size: 11px; font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase; }
+
+    .hero {
+      min-height: 310px;
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      align-items: flex-end;
+      background:
+        linear-gradient(180deg, rgba(17,19,24,.04) 22%, rgba(17,19,24,.96) 100%),
+        linear-gradient(135deg, #71808c 0%, #303842 48%, #171a1f 100%);
+    }
+    .hero::before {
+      content: "";
+      position: absolute;
+      width: 64%; height: 68%;
+      right: 3%; top: 20%;
+      border: 7px solid rgba(228,232,230,.75);
+      border-bottom: 0;
+      background:
+        linear-gradient(90deg, transparent 48%, rgba(21,24,27,.5) 49%, rgba(21,24,27,.5) 51%, transparent 52%) 0 0 / 25% 100%,
+        linear-gradient(rgba(19,22,25,.48) 49%, transparent 50%) 0 0 / 100% 20%;
+      transform: skewY(-3deg);
+      box-shadow: 20px 24px 50px rgba(0,0,0,.32);
+      opacity: .9;
+    }
+    .hero::after {
+      content: "";
+      position: absolute;
+      width: 84%; height: 6px;
+      right: -8%; top: 18%;
+      background: var(--accent);
+      transform: rotate(-3deg);
+      box-shadow: 0 0 18px rgba(216,239,40,.25);
+    }
+    .hero-content { position: relative; z-index: 2; padding: 28px 24px; max-width: 590px; }
+    .hero h1 { margin: 8px 0 10px; max-width: 430px; font-size: clamp(34px, 9vw, 64px); line-height: .98; letter-spacing: -2.2px; }
+    .hero h1 span { color: var(--accent); }
+    .hero p { max-width: 420px; color: #d5d8dc; line-height: 1.5; font-size: 14px; }
+    .primary {
+      min-height: 48px; border: 0; border-radius: 12px; padding: 0 18px;
+      background: var(--accent); color: var(--accent-dark); font-weight: 850;
+      box-shadow: 0 8px 24px rgba(216,239,40,.14);
+    }
+
+    .services { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px; }
+    .service {
+      min-height: 148px; display: flex; flex-direction: column; justify-content: space-between;
+      padding: 16px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--card);
+    }
+    .service-num { color: var(--accent); font-size: 12px; font-weight: 850; }
+    .service h3 { margin: 16px 0 6px; font-size: 15px; line-height: 1.25; }
+    .service p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.45; }
+
+    .panel { border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); padding: 16px; }
+    .calc-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
+    .calc-controls { display: grid; gap: 17px; }
+    .range-row { display: grid; gap: 8px; }
+    .range-row label { display: flex; justify-content: space-between; color: var(--muted); font-size: 13px; }
+    .range-row output { color: var(--text); font-weight: 800; }
+    input[type="range"] { width: 100%; accent-color: var(--accent); height: 18px; }
+    .payment { margin-top: 2px; display: grid; align-content: space-between; min-height: 210px; background: var(--card); }
+    .payment-label { color: var(--muted); font-size: 12px; }
+    .payment strong { display: block; margin: 5px 0 15px; color: var(--accent); font-size: 34px; letter-spacing: -1.5px; }
+    .payment dl { display: grid; grid-template-columns: 1fr auto; gap: 9px; margin: 14px 0 0; font-size: 13px; }
+    .payment dt { color: var(--muted); }
+    .payment dd { margin: 0; font-weight: 750; }
+
+    .calendar-layout { display: grid; gap: 10px; }
+    .calendar { min-width: 0; }
+    .calendar-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .calendar-head b { text-transform: capitalize; }
+    .icon-btn { width: 38px; height: 38px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); color: var(--text); font-size: 20px; }
+    .week, .days { display: grid; grid-template-columns: repeat(7,1fr); gap: 5px; }
+    .week span { color: var(--muted); text-align: center; font-size: 11px; padding: 4px 0; }
+    .day {
+      aspect-ratio: 1; border: 1px solid transparent; border-radius: 9px;
+      background: rgba(255,255,255,.035); color: var(--text); font-size: 12px; position: relative;
+    }
+    .day.today { border-color: rgba(216,239,40,.55); }
+    .day.selected { background: var(--accent); color: #171a08; font-weight: 850; }
+    .day.event::after { content:""; position:absolute; width:4px; height:4px; border-radius:50%; background:var(--accent); bottom:5px; left:50%; transform:translateX(-50%); }
+    .day.selected.event::after { background:#171a08; }
+    .blank { aspect-ratio: 1; }
+    .events h3 { font-size: 14px; margin-bottom: 12px; }
+    .event { padding: 11px 0; border-bottom: 1px solid var(--line); }
+    .event:last-child { border-bottom: 0; }
+    .event small { color: var(--accent); font-size: 10px; font-weight: 800; letter-spacing: .6px; text-transform: uppercase; }
+    .event p { margin: 4px 0 0; font-size: 13px; }
+    .empty { color: var(--muted); font-size: 13px; }
+
+    .stats { display: grid; grid-template-columns: repeat(2,1fr); gap: 8px; }
+    .stat { border: 1px solid var(--line); background: var(--card); border-radius: 14px; padding: 14px; }
+    .stat strong { display: block; color: var(--accent); font-size: 28px; }
+    .stat span { color: var(--muted); font-size: 11px; }
+
+    .objects { display: grid; gap: 10px; }
+    .object {
+      min-height: 178px; position: relative; overflow: hidden; border: 1px solid var(--line);
+      border-radius: var(--radius); padding: 16px; display: flex; align-items: flex-end;
+      background: linear-gradient(180deg, transparent 20%, rgba(13,15,18,.92)), linear-gradient(135deg,#667783,#252b31);
+    }
+    .object::before {
+      content:""; position:absolute; width:58%; height:58%; right:9%; top:14%;
+      border: 5px solid rgba(236,239,237,.58); border-bottom:0;
+      background: repeating-linear-gradient(90deg, transparent 0 27%, rgba(18,21,24,.7) 28% 30%), repeating-linear-gradient(0deg, transparent 0 23%, rgba(18,21,24,.55) 24% 27%);
+      transform: skewY(-4deg);
+    }
+    .object:nth-child(2) { background: linear-gradient(180deg, transparent 20%, rgba(13,15,18,.92)), linear-gradient(135deg,#7d735f,#282a2a); }
+    .object:nth-child(3) { background: linear-gradient(180deg, transparent 20%, rgba(13,15,18,.92)), linear-gradient(135deg,#596a68,#242927); }
+    .object-info { position: relative; z-index: 2; }
+    .live { display:inline-flex; align-items:center; gap:6px; color:#b8c96d; font-size:10px; font-weight:850; letter-spacing:.8px; }
+    .live i { width:6px; height:6px; border-radius:50%; background:#69d391; }
+    .object h3 { margin:6px 0 0; font-size:16px; }
+
+    .form { display: grid; gap: 10px; }
+    .field { display:grid; gap:6px; }
+    .field label { color:var(--muted); font-size:12px; }
+    .field input, .field textarea {
+      width:100%; border:1px solid var(--line); border-radius:12px; background:var(--card);
+      color:var(--text); padding:13px 14px; outline:none;
+    }
+    .field input:focus, .field textarea:focus { border-color: var(--accent); }
+    .field textarea { resize: vertical; min-height: 90px; }
+    .form-error { display:none; color:var(--danger); font-size:12px; }
+    .form-error.show { display:block; }
+
+    .bottom-nav {
+      position: fixed; z-index:30; left:50%; bottom:0; transform:translateX(-50%);
+      width:min(920px,100%); height:76px; display:grid; grid-template-columns:repeat(5,1fr);
+      padding:8px 8px calc(8px + env(safe-area-inset-bottom));
+      background:color-mix(in srgb,var(--bg) 94%,transparent); backdrop-filter:blur(18px);
+      border-top:1px solid var(--line);
+    }
+    .nav-btn { border:0; border-radius:11px; background:transparent; color:var(--muted); display:grid; place-items:center; align-content:center; gap:3px; font-size:9px; }
+    .nav-btn svg { width:21px; height:21px; stroke:currentColor; fill:none; stroke-width:1.8; }
+    .nav-btn.active { color:var(--accent); background:rgba(216,239,40,.07); }
+
+    @media (min-width: 680px) {
+      main { padding: 24px 20px 0; }
+      .topbar { padding-inline: 26px; }
+      .hero { min-height: 390px; }
+      .hero-content { padding: 42px; }
+      .services { grid-template-columns: repeat(4,1fr); }
+      .service { min-height: 190px; }
+      .calc-grid { grid-template-columns: 1.1fr .9fr; }
+      .calendar-layout { grid-template-columns: 1.15fr .85fr; }
+      .objects { grid-template-columns: repeat(3,1fr); }
+      .object { min-height: 220px; }
+      .stats { grid-template-columns: repeat(4,1fr); }
+      .form { grid-template-columns: 1fr 1fr; }
+      .field.message, .form-error, .form .primary { grid-column:1/-1; }
+    }
+    @media (max-width: 679px) {
+      .topbar {
+        height: calc(58px + env(safe-area-inset-top));
+        padding: calc(8px + env(safe-area-inset-top)) 14px 8px;
+      }
+      main { padding-top: 10px; }
+      .hero { min-height: 300px; }
+      .hero h1 { font-size: clamp(34px, 11vw, 48px); }
+      .hero-content { padding: 22px 18px; }
+      .primary, .icon-btn, .nav-btn { min-height: 44px; }
+      .icon-btn { min-width: 44px; }
+      .day { min-width: 44px; max-width: none; }
+      .week, .days { gap: 3px; }
+      .field input, .field textarea { font-size: 16px; }
+      input[type="range"] { height: 28px; }
+      input[type="range"]::-webkit-slider-thumb {
+        width: 24px; height: 24px;
+        -webkit-appearance: none;
+        border-radius: 50%; background: var(--accent);
+        border: 3px solid var(--bg);
+      }
+      input[type="range"]::-webkit-slider-runnable-track {
+        height: 6px; border-radius: 6px;
+        background: rgba(255,255,255,.14);
+      }
+    }
+    @media (max-width: 350px) {
+      main { padding-inline: 9px; }
+      .services { gap: 7px; }
+      .service { padding: 12px; }
+      .bottom-nav { padding-inline: 4px; }
+      .nav-btn { font-size: 8px; }
+      .week, .days { gap: 2px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand"><div class="brand-mark">SF</div><div>STEEL<b><span>FRAME</span></b></div></div>
+      <div class="status"><i></i><span>Проект открыт</span></div>
+    </header>
+
+    <main>
+      <section id="home">
+        <div class="hero">
+          <div class="hero-content">
+            <div class="eyebrow">Строительство · монтаж · девелопмент</div>
+            <h1>Строим <span>высоко.</span></h1>
+            <p>Каркасы, фасады и монолитные конструкции — от проекта до сдачи объекта.</p>
+            <button class="primary" type="button" data-scroll="contact">Рассчитать проект</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="services">
+        <h2>Что мы делаем</h2>
+        <div class="services">
+          <article class="service"><span class="service-num">01</span><div><h3>Каркасное строительство</h3><p>Стальные и монолитные каркасы любой сложности.</p></div></article>
+          <article class="service"><span class="service-num">02</span><div><h3>Фасады и остекление</h3><p>Навесные фасады, атриумы и энергоэффективные решения.</p></div></article>
+          <article class="service"><span class="service-num">03</span><div><h3>Башенные краны</h3><p>Собственный парк техники и опытные монтажные бригады.</p></div></article>
+          <article class="service"><span class="service-num">04</span><div><h3>Технадзор и BIM</h3><p>Цифровая модель и отчёты о ходе работ в реальном времени.</p></div></article>
+        </div>
+      </section>
+
+      <section id="calc">
+        <h2>Калькулятор ипотеки</h2>
+        <div class="calc-grid">
+          <div class="panel calc-controls">
+            <div class="range-row"><label for="price"><span>Стоимость</span><output id="priceOut"></output></label><input id="price" type="range" min="3000000" max="30000000" step="100000" value="9500000"></div>
+            <div class="range-row"><label for="down"><span>Первый взнос</span><output id="downOut"></output></label><input id="down" type="range" min="10" max="90" step="1" value="20"></div>
+            <div class="range-row"><label for="years"><span>Срок</span><output id="yearsOut"></output></label><input id="years" type="range" min="1" max="30" step="1" value="20"></div>
+            <div class="range-row"><label for="rate"><span>Ставка</span><output id="rateOut"></output></label><input id="rate" type="range" min="1" max="25" step=".1" value="12"></div>
+          </div>
+          <div class="panel payment">
+            <div><span class="payment-label">Ежемесячный платёж</span><strong id="monthly"></strong></div>
+            <dl><dt>Сумма кредита</dt><dd id="loan"></dd><dt>Переплата</dt><dd id="overpay"></dd><dt>Всего выплат</dt><dd id="total"></dd></dl>
+          </div>
+        </div>
+      </section>
+
+      <section id="calendar">
+        <h2>Календарь застройщика</h2>
+        <div class="calendar-layout">
+          <div class="panel calendar">
+            <div class="calendar-head"><button class="icon-btn" id="prevMonth" aria-label="Предыдущий месяц">‹</button><b id="monthTitle"></b><button class="icon-btn" id="nextMonth" aria-label="Следующий месяц">›</button></div>
+            <div class="week"><span>Пн</span><span>Вт</span><span>Ср</span><span>Чт</span><span>Пт</span><span>Сб</span><span>Вс</span></div>
+            <div class="days" id="days"></div>
+          </div>
+          <div class="panel events"><h3 id="selectedDate"></h3><div id="eventList"></div></div>
+        </div>
+      </section>
+
+      <section id="stats">
+        <div class="stats">
+          <div class="stat"><strong data-count="120">0</strong><span>Объектов сдано</span></div>
+          <div class="stat"><strong data-count="18">0</strong><span>Лет на рынке</span></div>
+          <div class="stat"><strong data-count="450">0</strong><span>Специалистов</span></div>
+          <div class="stat"><strong data-count="64">0</strong><span>Этажа — рекорд</span></div>
+        </div>
+      </section>
+
+      <section id="objects">
+        <h2>Объекты в работе</h2>
+        <div class="objects">
+          <article class="object"><div class="object-info"><span class="live"><i></i>НА ОБЪЕКТЕ</span><h3>ЖК «Север» · 14 этаж</h3></div></article>
+          <article class="object"><div class="object-info"><span class="live"><i></i>НА ОБЪЕКТЕ</span><h3>Бизнес-центр «Гранит»</h3></div></article>
+          <article class="object"><div class="object-info"><span class="live"><i></i>НА ОБЪЕКТЕ</span><h3>Логистический хаб</h3></div></article>
+        </div>
+      </section>
+
+      <section id="contact">
+        <h2>Обсудим проект</h2>
+        <form class="panel form" id="requestForm" novalidate>
+          <div class="field"><label for="name">Ваше имя</label><input id="name" name="name" autocomplete="name" required placeholder="Иван Иванов"></div>
+          <div class="field"><label for="email">Email</label><input id="email" name="email" type="email" autocomplete="email" required placeholder="ivan@example.ru"></div>
+          <div class="field message"><label for="message">Расскажите об объекте</label><textarea id="message" name="message" rows="4" placeholder="Адрес, площадь и желаемые сроки"></textarea></div>
+          <div class="form-error" id="formError">Заполните имя и корректный email.</div>
+          <button class="primary" type="submit">Отправить заявку</button>
+        </form>
+      </section>
+    </main>
+
+    <nav class="bottom-nav" aria-label="Основная навигация">
+      <button class="nav-btn active" data-scroll="home" aria-label="Главная"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/></svg><span>Главная</span></button>
+      <button class="nav-btn" data-scroll="services" aria-label="Услуги"><svg viewBox="0 0 24 24"><path d="M4 21V8l8-5 8 5v13M8 21v-6h8v6M8 10h.01M12 10h.01M16 10h.01"/></svg><span>Услуги</span></button>
+      <button class="nav-btn" data-scroll="calc" aria-label="Калькулятор"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M7 8h10M8 12h2M14 12h2M8 16h2M14 16h2"/></svg><span>Расчёт</span></button>
+      <button class="nav-btn" data-scroll="calendar" aria-label="Календарь"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M7 3v4M17 3v4M3 10h18"/></svg><span>График</span></button>
+      <button class="nav-btn" data-scroll="contact" aria-label="Контакты"><svg viewBox="0 0 24 24"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/><path d="M8 10h8M8 14h5"/></svg><span>Контакты</span></button>
+    </nav>
+  </div>
+
+  <script>
+    (() => {
+      const tg = window.Telegram && window.Telegram.WebApp;
+      if (tg) {
+        tg.ready();
+        tg.expand();
+        tg.setHeaderColor('#111318');
+        tg.setBackgroundColor('#111318');
+        if (tg.enableClosingConfirmation) tg.enableClosingConfirmation();
+      }
+
+      const haptic = (type = 'light') => {
+        if (!tg || !tg.HapticFeedback) return;
+        if (type === 'error' || type === 'success') {
+          tg.HapticFeedback.notificationOccurred(type);
+        } else {
+          tg.HapticFeedback.impactOccurred(type);
+        }
+      };
+
+      document.querySelectorAll('[data-scroll]').forEach(button => {
+        button.addEventListener('click', () => {
+          haptic();
+          document.getElementById(button.dataset.scroll)?.scrollIntoView({behavior:'smooth', block:'start'});
+        });
+      });
+
+      const sections = [...document.querySelectorAll('main section[id]')];
+      const navButtons = [...document.querySelectorAll('.nav-btn')];
+      const observer = new IntersectionObserver(entries => {
+        const visible = entries.filter(e => e.isIntersecting).sort((a,b) => b.intersectionRatio-a.intersectionRatio)[0];
+        if (!visible) return;
+        let id = visible.target.id;
+        if (id === 'stats' || id === 'objects') id = 'home';
+        navButtons.forEach(btn => btn.classList.toggle('active', btn.dataset.scroll === id));
+      }, {rootMargin:'-25% 0px -55%', threshold:[.1,.25,.5]});
+      sections.forEach(section => observer.observe(section));
+
+      const money = value => Math.round(value).toLocaleString('ru-RU') + ' ₽';
+      const calc = () => {
+        const price = +document.getElementById('price').value;
+        const down = +document.getElementById('down').value;
+        const years = +document.getElementById('years').value;
+        const rate = +document.getElementById('rate').value;
+        const loan = price * (1-down/100);
+        const monthRate = rate/1200;
+        const months = years*12;
+        const monthly = monthRate ? loan*monthRate/(1-Math.pow(1+monthRate,-months)) : loan/months;
+        const total = monthly*months;
+        document.getElementById('priceOut').textContent = money(price);
+        document.getElementById('downOut').textContent = down + '% · ' + money(price*down/100);
+        document.getElementById('yearsOut').textContent = years + ' ' + (years === 1 ? 'год' : years < 5 ? 'года' : 'лет');
+        document.getElementById('rateOut').textContent = rate.toFixed(1).replace('.0','') + '%';
+        document.getElementById('monthly').textContent = money(monthly);
+        document.getElementById('loan').textContent = money(loan);
+        document.getElementById('overpay').textContent = money(total-loan);
+        document.getElementById('total').textContent = money(total);
+      };
+      ['price','down','years','rate'].forEach(id => document.getElementById(id).addEventListener('input', calc));
+      calc();
+
+      const now = new Date();
+      let visibleMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      let selected = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const events = {};
+      [[-12,'Заливка плиты 12 этажа','Выполнено'],[-4,'Монтаж лифтовых шахт','Выполнено'],[2,'Поставка арматуры','План'],[9,'Монтаж фасадных панелей','План'],[21,'День открытых дверей','Событие'],[33,'Остекление этажей 1–6','План'],[70,'Сдача корпуса 1','Ключевой этап']].forEach(([offset,title,status]) => {
+        const date = new Date(now.getFullYear(), now.getMonth(), now.getDate()+offset);
+        const key = date.toDateString();
+        (events[key] ||= []).push({title,status});
+      });
+      const sameDay = (a,b) => a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate();
+      const renderCalendar = () => {
+        const year = visibleMonth.getFullYear();
+        const month = visibleMonth.getMonth();
+        document.getElementById('monthTitle').textContent = visibleMonth.toLocaleDateString('ru-RU',{month:'long',year:'numeric'});
+        const startOffset = (new Date(year,month,1).getDay()+6)%7;
+        const daysInMonth = new Date(year,month+1,0).getDate();
+        let html = '';
+        for(let i=0;i<startOffset;i++) html += '<span class="blank"></span>';
+        for(let day=1;day<=daysInMonth;day++) {
+          const date = new Date(year,month,day);
+          const key = date.toDateString();
+          html += `<button class="day${sameDay(date,now)?' today':''}${sameDay(date,selected)?' selected':''}${events[key]?' event':''}" data-date="${key}" aria-label="${day}">${day}</button>`;
+        }
+        document.getElementById('days').innerHTML = html;
+        document.getElementById('selectedDate').textContent = selected.toLocaleDateString('ru-RU',{day:'numeric',month:'long',weekday:'long'});
+        const list = events[selected.toDateString()];
+        document.getElementById('eventList').innerHTML = list
+          ? list.map(item => `<div class="event"><small>${item.status}</small><p>${item.title}</p></div>`).join('')
+          : '<p class="empty">В этот день работ не запланировано.</p>';
+      };
+      document.getElementById('days').addEventListener('click', event => {
+        const key = event.target.dataset.date;
+        if (!key) return;
+        selected = new Date(key);
+        haptic();
+        renderCalendar();
+      });
+      document.getElementById('prevMonth').addEventListener('click', () => {visibleMonth=new Date(visibleMonth.getFullYear(),visibleMonth.getMonth()-1,1);renderCalendar();});
+      document.getElementById('nextMonth').addEventListener('click', () => {visibleMonth=new Date(visibleMonth.getFullYear(),visibleMonth.getMonth()+1,1);renderCalendar();});
+      renderCalendar();
+
+      const counters = document.querySelectorAll('[data-count]');
+      const counterObserver = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+          if (!entry.isIntersecting || entry.target.dataset.done) return;
+          entry.target.dataset.done = '1';
+          const target = +entry.target.dataset.count;
+          const start = performance.now();
+          const tick = time => {
+            const progress = Math.min((time-start)/900,1);
+            entry.target.textContent = Math.round(target*(1-Math.pow(1-progress,3)));
+            if (progress<1) requestAnimationFrame(tick);
+          };
+          requestAnimationFrame(tick);
+        });
+      }, {threshold:.6});
+      counters.forEach(counter => counterObserver.observe(counter));
+
+      const form = document.getElementById('requestForm');
+      form.addEventListener('submit', event => {
+        event.preventDefault();
+        const name = document.getElementById('name').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const message = document.getElementById('message').value.trim();
+        const error = document.getElementById('formError');
+        const validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        if (!name || !validEmail) {
+          error.classList.add('show');
+          haptic('error');
+          (!name ? document.getElementById('name') : document.getElementById('email')).focus();
+          return;
+        }
+        error.classList.remove('show');
+        haptic('success');
+        const payload = JSON.stringify({type:'project_request',name,email,message});
+        if (tg && tg.sendData) {
+          tg.sendData(payload);
+          tg.close();
+        } else {
+          const button = form.querySelector('button[type="submit"]');
+          button.textContent = 'Заявка принята ✓';
+          button.disabled = true;
+          form.reset();
+          setTimeout(() => {button.textContent='Отправить заявку';button.disabled=false;}, 2400);
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
